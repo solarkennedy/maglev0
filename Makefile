@@ -1,5 +1,5 @@
 run: maglev0
-	./maglev0
+	sudo ./maglev0
 
 maglev0: main.go
 	go build .
