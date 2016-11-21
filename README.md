@@ -1,7 +1,7 @@
 # maglev0
 
 Faux-maglev-style hashing for managing VIPs using Iptables CLUSTERIP and
-Zookeeper.
+Zookeeper. Not sanctioned or supported by Google in any way.
 
 [![Build Status](https://travis-ci.org/solarkennedy/maglev0.svg?branch=master)](https://travis-ci.org/solarkennedy/maglev0)
 
@@ -34,7 +34,9 @@ hashing algorithm to minimize disruption.
 "router-less router", where each node opts in to responding for packets it
 thinks it is responsible for, ignoring the rest. It is more akin to
 [ECMP](https://en.wikipedia.org/wiki/Equal-cost_multi-path_routing) without the
-router help.
+router help. This is the reasoning behind the `0` in `maglev0`: It implements
+the first "layer" of routing that maglev-powered loadbalancers need, the
+ECMP-style routing.
 
 Future work might include using something other than CLUSTERIP, which is an old
 (underrated?) technology that does not work in "cloud" environments.
@@ -73,6 +75,36 @@ Options:
   --cluster-ip=<IP> Cluster ip (vip) to manage. [default: 198.51.100.1]
   -h, --help        Show this screen
 ```
+
+## Example Output
+
+```
+sudo ./maglev0
+map[--my-id:1 --total-nodes:<nil> --zk:localhost:2181 --cluster-ip:<nil>]
+2016/11/20 17:54:02 Connected to [::1]:2181
+2016/11/20 17:54:02 Authenticated: id=96972190335828052, timeout=4000
+2016/11/20 17:54:02 Re-submitting `0` credentials after reconnect
+...
+
+[1 3 4]
+backend-4 is responsible for node 1
+backend-3 is responsible for node 2
+backend-1 (me!) is responsible for node 3
+backend-4 is responsible for node 4
+backend-4 is responsible for node 5
+CLUSTERIP Nodes:  3
+
+....
+
+[1 3]
+backend-1 (me!) is responsible for node 1
+backend-3 is responsible for node 2
+backend-1 (me!) is responsible for node 3
+backend-3 is responsible for node 4
+backend-1 (me!) is responsible for node 5
+CLUSTERIP Nodes:  1,3,5
+```
+
 
 ## Warning
 

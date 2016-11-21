@@ -38,7 +38,7 @@ func (s *State) RegisterZK() {
 	_, err := s.zk_conn.Create(s.zk_chroot, []byte(""), flags, acl)
 
 	node := fmt.Sprintf("%s/%d", s.zk_chroot, s.my_id)
-	fmt.Println("Registering under %s", node)
+	fmt.Println("Registering under ", node)
 	flags = int32(zk.FlagEphemeral)
 	acl = zk.WorldACL(zk.PermAll)
 	_, err = s.zk_conn.Create(node, []byte(""), flags, acl)
