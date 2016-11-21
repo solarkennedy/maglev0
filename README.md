@@ -10,7 +10,7 @@ Zookeeper. Not sanctioned or supported by Google in any way.
 `maglev0` is a proof-of-concept tool to implement "maglev"-style consistent
 hashing with Linux's CLUSTERIP iptables rules.
 
-CLUSTERIP allows for N servers to share the burden of respondig to requests on
+CLUSTERIP allows for N servers to share the burden of responding to requests on
 an IP (vip), contrast to the traditional HA Active/Standby failover techniques
 where N=2. ("[seesaw](https://github.com/google/seesaw)"-style)
 
