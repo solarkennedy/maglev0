@@ -2,6 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/ec2metadata"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/docopt/docopt-go"
 	"github.com/kkdai/maglev"
 	"github.com/samuel/go-zookeeper/zk"
@@ -18,6 +22,7 @@ type State struct {
 	zk_chroot  string
 	cluster_ip string
 	zk_conn    *zk.Conn
+	ec2_svc    *ec2.EC2
 }
 
 func (s *State) PrintZK() {
@@ -93,8 +98,24 @@ func (s *State) SyncBackends() {
 }
 
 func (s *State) RemoveNode(node int) {
-	d := []byte(fmt.Sprintf("-%d\n", node))
-	ioutil.WriteFile(s.GetClusterIPFile(), d, 0644)
+	fmt.Println("Removing node", node)
+	params := s.ec2_svc.AttachNetworkInterfaceInput{
+		DeviceIndex:        aws.Int64(1),         // Required
+		InstanceId:         aws.String("String"), // Required
+		NetworkInterfaceId: aws.String("String"), // Required
+		DryRun:             aws.Bool(true),
+	}
+	resp, err := s.ec2_svc.AttachNetworkInterface(params)
+
+	if err != nil {
+		// Print the error, cast err to awserr.Error to get the Code and
+		// Message from an error.
+		fmt.Println(err.Error())
+		return
+	}
+
+	// Pretty-print the response data.
+	fmt.Println(resp)
 }
 
 func (s *State) AddNode(node int) {
@@ -209,6 +230,13 @@ func main() {
 	}
 	maglev_m := 13 // Must be prime per the paper
 
+	sess, err := session.NewSession()
+	if err != nil {
+		fmt.Println("failed to create session,", err)
+		panic("!")
+	}
+	svc := ec2.New(sess)
+
 	state := State{
 		my_id:      my_id,
 		ring_size:  total_nodes, //
@@ -216,6 +244,7 @@ func main() {
 		zk_chroot:  "/maglev0",
 		zk_conn:    zk_conn,
 		maglev:     maglev.NewMaglev(names, uint64(maglev_m)),
+		ec2_svc:    svc,
 	}
 
 	state.WatchForever()
